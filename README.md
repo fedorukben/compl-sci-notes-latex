@@ -6,6 +6,9 @@ Since Lecture 01 was not really relevant, I am not typing it up. We didn't cover
 
 Also, if you notice any problems or possible improvements to my LaTeX, please feel free to message me over Slack, or through Discord (@benfedoruk#8525), or via email (ben@benfedoruk.com). 
 
+## 04 -- Error Plotting, Recursion, Newton-Raphson Iteration
+Lecture was on Friday January 28, 2022. 
+
 ## 03 -- Bifurcation, Newton's Method, Secant Method
 Lecture was on Wednesday January 25, 2022.
 
