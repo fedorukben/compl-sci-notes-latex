@@ -1,0 +1,149 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{framed}
+\usepackage{titlesec}
+\usepackage{shadethm}
+\usepackage{xcolor}
+\usepackage{minted}
+\usepackage{mathtools}
+\usepackage[margin=0.5in]{geometry}
+
+\title{Root Finding, Iterative Methods}
+\author{MATH2072}
+\date{\today}
+
+\newcommand{\sectionbreak}{\clearpage}
+\pagenumbering{gobble}
+
+\newshadetheorem{prototheorem}{Theorem}
+\newenvironment{theorem}
+	{\definecolor{shadethmcolor}{HTML}{EDF8FF}\definecolor{shaderulecolor}{HTML}{45CFFF}\setlength{\shadeboxrule}{.4pt}\begin{prototheorem}\normalfont}
+	{\end{prototheorem}}
+\newshadetheorem{protodefinition}{Definition}
+\newenvironment{definition}
+	{\definecolor{shahow to change the format of the titledethmcolor}{HTML}{FFD6a1}\definecolor{shaderulecolor}{HTML}{FFA32B}\setlength{\shadeboxrule}{.4pt}\begin{protodefinition}\normalfont}
+	{\end{protodefinition}}
+\newshadetheorem{protocorollary}{Corollary}
+\newenvironment{corollary}
+	{\definecolor{shadethmcolor}{HTML}{D4FFEB}\definecolor{shaderulecolor}{HTML}{21FF97}\setlength{\shadeboxrule}{.4pt}\begin{protocorollary}\normalfont}
+	{\end{protocorollary}}
+\newshadetheorem{protoremark}{Remark}
+\newenvironment{remark}
+	{\definecolor{shadethmcolor}{HTML}{DFD4FF}\definecolor{shaderulecolor}{HTML}{713DFF}\setlength{\shadeboxrule}{.4pt}\begin{protoremark}\normalfont}
+	{\end{protoremark}}
+\newshadetheorem{protoexample}{Example}
+\newenvironment{example}
+	{\definecolor{shadethmcolor}{HTML}{FFB0B0}\definecolor{shaderulecolor}{HTML}{FF3D3D}\setlength{\shadeboxrule}{.4pt}\begin{protoexample}\normalfont}
+	{\end{protoexample}}
+
+\begin{document}
+\part*{Lecture 2\\Root Finding and Iterative Method}
+	
+\section*{Root Finding}
+
+\begin{example}
+To what elevation should the cannon be raised to hit the target?
+
+Parameters:
+\begin{itemize}
+	\item $g$ = gravitational acceleration ($ms^{-2}$): known;
+	\item $V_0$ = initial speed ($ms^{-1}$): known;
+	\item $R$ = distance to target ($m$): known;
+	\item $\theta^*$ = required elevation (radians): unknown.
+\end{itemize}
+
+Determine elevation $\theta^*$ needed to hit target using known values of parameters $V_0$, $R$, and $g$. 
+
+\begin{itemize}
+	\item Coordinates of cannonball at time $t$ are ($x(t)$, $y(t)$).
+	\item Motion of cannonball determined by Newton's 2nd law:
+	\[
+		\begin{cases}
+		x''(t)=0, & x(0)=0,x'(0)=V_0\cos\theta^* \\
+		y''(t)=-g & y(0)=0,y'(0)=V_0\sin\theta^* - \frac{1}{2}gt^2
+		\end{cases}
+	\]
+	\item Want to find $\theta^*$ such that $x(T)=R$ and $y(T)=0$, where $T$ is the time of flight.
+	\item Can eliminate $T$ using $y(T)=0$ (i.e. object is on the ground). 
+	\item If $y(T) = 0$ then $T=0$ or $T=\frac{2V_0\sin\theta^*}{g}$.
+	\item Reject $T=0$, so to have $x(T)=R$, we must have
+	\[
+		x(T) = (V_0\cos\theta^*)(\frac{2V_0\sin\theta^*}{g})=R
+	\]
+\end{itemize}
+Zero-finding problem: find elevation $\theta^*$ such that $f(\theta^*)=0$, where
+\[
+	f(\theta):=2\sin\theta\cos\theta-\frac{Rg}{V_0^2}
+\]
+\end{example}
+\clearpage
+\begin{example}
+Suppose you pay an amount of money to a bank every year and they promise to pay you a lump sum when you retire. Over one year, you would pay an amount
+\[
+	\nu P=\frac{1}{1+i}P
+\]
+for this service to compensate for the loss of interest, where $i$ is the percentage interest rate.
+
+Over $n$ years you will pay
+\[
+	\nu P + \nu^2P + ... + \nu^nP=\nu P\frac{1-\nu^n}{1-\nu}=T
+\]
+\end{example}
+\section*{Iterative Methods}
+\begin{itemize}
+	\item Algorithms for solving $f(x^*)=0$ are usually iterative. 
+	\item Starting from $x^{(0)}$, make sequence of iterates
+	\[
+	\begin{aligned}
+		x^{(1)}&=\phi(x^{(0)}), \\
+		x^{(2)}&=\phi(x^{(1)}), \\
+		&\vdotswithin{=} \\
+		x^{(k+1)}&=\phi(x^{(k)}), \\
+		&\vdotswithin{=}
+	\end{aligned}
+	\]
+	\item $\phi$ function/rule generating successive iterates
+	\item Rule $x^{(k+1)}=\phi(x^{(k)})$ for $k \geq 0$ is a recurrance relation. 
+\end{itemize}
+\begin{example}
+$x^{(0)}:=1$ and $\phi : \mathbb{R}\to\mathbb{R}$ is the function given by
+\[
+	(\forall t\in\mathbb{R})\quad\phi(t)=2t
+\]
+\end{example}
+\clearpage
+\begin{example}
+Given $a>0$ and $x^{(0)} > 0$, consider sequence
+\[
+	x^{(k+1)}=\phi(x^{(k)}=\frac{1}{2}(x^{(k)}+\frac{a}{x^{(k)}})\quad(k=0,1,...)
+\]
+with $a=5$ and $x^{(0)}=3$.
+
+What does this sequence converge to? 
+\end{example}
+\clearpage
+\begin{remark}
+Any iteration $x^{(k+1)}=\phi(x^{(k)}$ generates a sequence
+\[
+	\{x^{(k)}\}^\infty_{k=0}=\{x^{(0)},x^{(1)},x^{(2)},...,x^{(k-1)},x^{(k)},x^{(k+1)},...\}
+\]
+\end{remark}
+\vspace{1.5in}
+\begin{remark}
+Recall that the limit of sequence $\{x^{(k)}\}^\infty_{k=0}$ is $x^*\in\mathbb{R}$ iff
+\[
+	(\forall \epsilon > 0)(\exists K\in\mathbb{N})\quad [(k\geq K)\implies |x^{(k)}-x^*|\leq \epsilon]
+\]
+\end{remark}
+\vspace{1.5in}
+\begin{theorem}
+The sequence $\{x^{(k)}\}^\infty_{k=0}$ converges to $x^*\in\mathbb{R}$ or
+\[
+\boxed{
+	 \lim_{k\to\infty} x^{(k)}=x^* 
+}
+\]
+\end{theorem}
+\end{document}

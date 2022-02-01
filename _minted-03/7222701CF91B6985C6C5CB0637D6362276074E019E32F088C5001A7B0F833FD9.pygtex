@@ -1,0 +1,7 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{k}{def} \PYG{n+nf}{fact}\PYG{p}{(}\PYG{n}{k}\PYG{p}{):}
+	\PYG{k}{if} \PYG{n}{k} \PYG{o}{==} \PYG{l+m+mi}{1}\PYG{p}{:}
+		\PYG{k}{return} \PYG{l+m+mi}{1}
+	\PYG{k}{else}\PYG{p}{:}
+		\PYG{k}{return} \PYG{n}{fact}\PYG{p}{(}\PYG{n}{k}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{)} \PYG{o}{*} \PYG{n}{k}
+\end{Verbatim}

@@ -1,0 +1,204 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{framed}
+\usepackage{titlesec}
+\usepackage{shadethm}
+\usepackage{xcolor}
+\usepackage{minted}
+\usepackage{mathtools}
+\usepackage[margin=0.5in]{geometry}
+\usepackage{algpseudocode}
+\usepackage{algorithm}
+
+\title{Root Finding, Iterative Methods}
+\author{MATH2072}
+\date{\today}
+
+\newcommand{\sectionbreak}{\clearpage}
+\pagenumbering{gobble}
+
+\newshadetheorem{prototheorem}{Theorem}
+\newenvironment{theorem}
+	{\definecolor{shadethmcolor}{HTML}{EDF8FF}\definecolor{shaderulecolor}{HTML}{45CFFF}\setlength{\shadeboxrule}{.4pt}\begin{prototheorem}\normalfont}
+	{\end{prototheorem}}
+\newshadetheorem{protodefinition}{Definition}
+\newenvironment{definition}
+	{\definecolor{shadethmcolor}{HTML}{FFD6a1}\definecolor{shaderulecolor}{HTML}{FFA32B}\setlength{\shadeboxrule}{.4pt}\begin{protodefinition}\normalfont}
+	{\end{protodefinition}}
+\newshadetheorem{protocorollary}{Corollary}
+\newenvironment{corollary}
+	{\definecolor{shadethmcolor}{HTML}{D4FFEB}\definecolor{shaderulecolor}{HTML}{21FF97}\setlength{\shadeboxrule}{.4pt}\begin{protocorollary}\normalfont}
+	{\end{protocorollary}}
+\newshadetheorem{protoremark}{Remark}
+\newenvironment{remark}
+	{\definecolor{shadethmcolor}{HTML}{DFD4FF}\definecolor{shaderulecolor}{HTML}{713DFF}\setlength{\shadeboxrule}{.4pt}\begin{protoremark}\normalfont}
+	{\end{protoremark}}
+\newshadetheorem{protoexample}{Example}
+\newenvironment{example}
+	{\definecolor{shadethmcolor}{HTML}{FFB0B0}\definecolor{shaderulecolor}{HTML}{FF3D3D}\setlength{\shadeboxrule}{.4pt}\begin{protoexample}\normalfont}
+	{\end{protoexample}}
+
+\begin{document}
+\part*{Lecture 3\\Bisection, Newton's Method, Secant Method}
+
+\section*{Bisection}
+\subsection*{The Problem}
+Suppose we have a continuous function $f$ on some domain $[a,b]$. Find $x^*\in[a,b]$ such that
+\[
+	f(x^*)=0
+\]
+
+\begin{theorem}
+\textbf{(Intermediate Value Theorem) } Suppose we have a continous function $f$ on some domain $[a,b]$. Then if $k$ is some number between $f(a)$ and $f(b)$ then there exists at least one number $c$ in the interval $[a,b]$ such that $f(c)=k$. That is,
+\[
+\begin{aligned}
+f(a)<k<f(b)\quad\text{or}\quad f(a)>k>f(b), \\
+\to\quad\exists c\in [a,b]\quad\text{s.t.}\quad f(c)=k
+\end{aligned}
+\]
+\end{theorem}
+\vspace{1.5in}
+\textbf{Note:} The Intermediate Value Theorem can be applied at $k=0$ to find where $f(c)=0$ when $f(a)f(b) < 0$. 
+\begin{algorithm}
+\caption{Bisection.}\label{alg:bisect}
+\begin{algorithmic}
+\Require $f\in\{f:\mathbb{F}\to\mathbb{F}\}$, $a\in\mathbb{R}$, $b\in\mathbb{R}$, $k_\text{max}\in\mathbb{Z}^+$, $\epsilon_x\in\mathbb{R}$, $\epsilon_f\in\mathbb{R}$.
+\State $a \gets a_0$
+\State $b \gets b_0$
+\State $k \gets 1$
+\While{$k \leq k_\text{max}$}
+	\State $c_k \gets \frac{1}{2}(a_{k-1} + b_{k - 1})$
+	\State $f_k \gets f(c_k)$
+	\If{$f_kf(a_{k-1})>0$}
+		\State $a_k \gets c_k$
+		\State $b_k \gets b_{k-1}$
+	\Else
+		\State $a_k \gets a_{k-1}$
+		\State $b_k \gets c_k$
+	\EndIf
+	\If{$|b_k-a_k|<\epsilon_x \text{or} |f(c_k)|<\epsilon_f$}
+		\State $k \gets k_\text{max} + 1$
+	\EndIf
+	\State $k \gets k + 1$
+\EndWhile
+\end{algorithmic}
+\end{algorithm}
+\section*{Newton's Method}
+\begin{theorem}
+\textbf{(Newton's Method) } Given an iterate $x^{(k)}$ approximating a zero of $f$, the next iterate is:
+\[
+\boxed{
+	x^{(k+1)}=x^{(k)}-\frac{f(x^{(k)})}{f'(x^{(k)})}
+}
+\]
+\begin{itemize}
+	\item Iterative procedure to locate zeros of $f$.
+	\item Requires initial iterate $x^{(0)}$ to start.
+	\item Near true zero $x^*$ of $f$, iteration converges quickly. 
+\end{itemize}
+\end{theorem}
+\clearpage
+\begin{algorithm}
+\caption{Newton's Method}\label{alg:newtons-method}
+\begin{algorithmic}
+\Require $f$, $f'$, $x^{(0)}$.
+\State $k \gets 0$
+\While{$k = 0, 1, 2, ... \text{\textbf{until} convergence}$}
+	\State $r^{(k)} \gets f(x^{(k)})$ \Comment{(evaluate nonlinear residual)}
+	\State $\delta x^{(k)}\gets -[f'(x^{(k)}]^{-1}r^{(k)}$\Comment{(compute Newton step)}
+	\State $x^{(k+1)}\gets x^{(k)}+\delta x^{(k)}$\Comment{(compute next iterate)}
+	\State Test for convergence\Comment{(break if necessary)}
+\EndWhile
+\end{algorithmic}
+\end{algorithm}
+\begin{definition}
+The \textbf{residual} $r^{(k)}$ is defined by:
+\[
+	r^{(k)}:=f(x(^{(k)}))
+\]
+\end{definition}
+\begin{definition}
+The \textbf{Newton step} $\delta x^{(k)}$ is defined by:
+\[
+	\delta x^{(k)}:=-[f'(x^{(k)})]^{-1}r^{(k)}
+\]
+\end{definition}
+\begin{example}
+Carry out Newton's method starting from $x^{(0)}=0.75$ to find $x^{(3)}$ that approximates the real solution of $x=\cos x$.
+\end{example}
+\clearpage
+\begin{example}
+Carry out Newton's method starting from $x^{(0)}=0.5$ to find $x^{(3)}$ that approximates a zero of the equation $xe^x=2$.
+\end{example}
+\clearpage
+Now we have to answer these three essential questions: \\
+
+\textbf{1. Under what conditions does the algorithm converge?}
+
+Bisection converges to some $x^*$ such that $f(x^*)=0$ in $[a,b]$ if $f$ is continuous and $f(a)f(b) < 0$. If there are two or more solutions, we don't know to which one it will converge. 
+Newton iteration converges if $x_0$ is \textit{sufficiently close} to $x^*$. Usually, we do not know a priori how close is close enough and we must resort to trial and error. 
+\vspace{1in}
+
+\textbf{2. How accurate will the result be?'}
+
+Both methods can give us $x^*$ up to machine precision.
+\vspace{1in}
+
+\textbf{3. How fast does it converge?}
+
+In bisection, the error $|x^*-x^{(k)}|$ decreases by a factor of $\frac{1}{2}$ in each iteration. In Newton iterations, the error is approximately squared in each iteration (provided it is small enough). 
+
+\[
+\epsilon_0, \frac{\epsilon_0}{2}, \frac{\epsilon_0}{4}, \frac{\epsilon_0}{8},...\qquad\text{vs.}\qquad\epsilon_0, \epsilon_0^2, \epsilon_0^4, \epsilon_0^8,...
+\]
+
+Newton's method converges very quickly, but requires the computation of $f'(x)$. Sometimes, we cannot compute it, for instance if $f$ is shorthand for some complicated procedure. In that case we have two options: (1) bisection or (2) the secant method. 
+\vspace{1in}
+
+\begin{remark}
+Suppose we have two initial points, $x_0$ and $x_1$. Then we can estimate the derivative of $f$ at $x_1$ as
+\[
+	f'(x_1)\approx\frac{f(x_1)-f(x_0)}{x_1-x_0}
+\]
+and substitute this in the Newton iteration:
+\[
+	x_2=x_1-\frac{f(x_1)}{f'(x_1)}\approx x_1-\frac{f(x_1)(x_1-x_0)}{f(x_1)-f(x_0)}
+\]
+\end{remark}
+\clearpage
+\begin{theorem}
+\textbf{(Secant Method) } Given iterates $x^{(k)}$ and $x^{(k-1)}$ approximating a zero of $f$, compute
+\[
+\boxed{
+	x^{(k+1)}=x^{(k)}-\frac{f(x^{(k)})(x^{(k)}-x^{(k-1)})}{f(x^{(k)})-f(x^{(k-1)})}
+}
+\quad (k\geq q)
+\]
+
+Secant methods need two initial guesses: $x^{(0)}$ and $x^{(1)}$. 
+\end{theorem}
+\vspace{0.5in}
+
+\begin{remark}
+Some remarks on secant methods:
+\begin{itemize}
+	\item This method uses a \textit{finite difference} approximation to $f'$. 
+	\item Asymptotically (meaning if $|x^{(k)}-x^*|$ is small enough) the secant method converges as fast as Newton's method does. 
+	\item The secant method has extensions to problems with more than 1 unknown, but in this case Newton's method tends to be less cumbersome.
+	\item The secant method is a \textit{second order recurrance relation}. It relates the next approximation to the two previous approximations. 
+	\item If we can find an $a$ and $b$ such that $x^* \in [a,b]$, then $x_0=a$ and $x_1=b$ is a good starting point.
+\end{itemize}
+\end{remark}
+\section*{Recursion}
+Recurrence and iteration really mean procedures in which we repeat the same action over and over. One way to program this is by using \texttt{for} and \texttt{while} loops. We can also make the recurrent nature of the computation explicit my making the function call itself. This is called recursive programming. See the Python code below for a simple example of recursion to calculate the factorial function:
+
+\begin{minted}{python}
+def fact(k):
+	if k == 1:
+		return 1
+	else:
+		return fact(k-1) * k
+\end{minted}
+\end{document}
