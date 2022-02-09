@@ -1,0 +1,696 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{framed}
+\usepackage{titlesec}
+\usepackage{shadethm}
+\usepackage{xcolor}
+\usepackage{minted}
+\usepackage{mathtools}
+\usepackage[margin=0.5in]{geometry}
+\usepackage{algpseudocode}
+\usepackage{algorithm}
+
+\title{Root Finding, Iterative Methods}
+\author{MATH2072}
+\date{\today}
+
+\newcommand{\sectionbreak}{\clearpage}
+\pagenumbering{gobble}
+
+\newshadetheorem{prototheorem}{Theorem}
+\newenvironment{theorem}
+	{\definecolor{shadethmcolor}{HTML}{EDF8FF}\definecolor{shaderulecolor}{HTML}{45CFFF}\setlength{\shadeboxrule}{.4pt}\begin{prototheorem}\normalfont}
+	{\end{prototheorem}}
+\newshadetheorem{protodefinition}{Definition}
+\newenvironment{definition}
+	{\definecolor{shadethmcolor}{HTML}{FFD6a1}\definecolor{shaderulecolor}{HTML}{FFA32B}\setlength{\shadeboxrule}{.4pt}\begin{protodefinition}\normalfont}
+	{\end{protodefinition}}
+\newshadetheorem{protocorollary}{Corollary}
+\newenvironment{corollary}
+	{\definecolor{shadethmcolor}{HTML}{D4FFEB}\definecolor{shaderulecolor}{HTML}{21FF97}\setlength{\shadeboxrule}{.4pt}\begin{protocorollary}\normalfont}
+	{\end{protocorollary}}
+\newshadetheorem{protoremark}{Remark}
+\newenvironment{remark}
+	{\definecolor{shadethmcolor}{HTML}{DFD4FF}\definecolor{shaderulecolor}{HTML}{713DFF}\setlength{\shadeboxrule}{.4pt}\begin{protoremark}\normalfont}
+	{\end{protoremark}}
+\newshadetheorem{protoexample}{Example}
+\newenvironment{example}
+	{\definecolor{shadethmcolor}{HTML}{FFB0B0}\definecolor{shaderulecolor}{HTML}{FF3D3D}\setlength{\shadeboxrule}{.4pt}\begin{protoexample}\normalfont}
+	{\end{protoexample}}
+
+\begin{document}
+\part*{Lecture 5\\Matrices, Gaussian Elimination, LU Decomposition}
+\section*{Reminder of Matrices}
+\begin{remark}
+We need to solve a system of linear equations of the form:
+\[
+\begin{array}{ccc}
+a_{1,1}x_1+a_{1,2}x_2+...+a_{1,n}x_n&=&b_1 \\
+a_{2,1}x_1+a_{2,2}x_2+...+a_{2,n}x_n&=&b_2 \\
+\vdots&&\vdots \\
+a_{n,1}x_1+a{n,2}x_2+...+a_{n,n}x_n&=&b_n \\
+\end{array}
+\]
+or in matrix form:
+\[
+A\mathbf{x}=\mathbf{b}
+\]
+where $A\in\mathbb{R}^{n\times n}$ is a matrix, $\mathbf{x}\in\mathbb{R}^n$ are unknowns, and $\mathbf{b}\in\mathbb{R}^n$. 
+\end{remark}
+\begin{example}
+\[
+\begin{array}{rcl}
+x_1+2x_2-4x_3+x_4&=&1 \\
+3x_1-x_2+x_3+4x_4&=&3 \\
+x_1-2x_2-4x_3+x_4&=&-1 \\
+2x_1-x_2-x_3+3x_4&=&2 
+\end{array}
+\]
+or in matrix form:
+\[
+A\mathbf{x}=\mathbf{b}
+\]
+where
+\[
+A=
+\begin{bmatrix}
+1&2&-4&1\\
+3&-1&1&4\\
+1&-2&3&-1\\
+2&-1&-1&3\\
+\end{bmatrix}
+,\quad\mathbf{x}=
+\begin{bmatrix}
+x_1\\
+x_2\\
+x_3\\
+x_4
+\end{bmatrix}
+,\quad\mathbf{b}=
+\begin{bmatrix}
+1\\
+3\\
+-1\\
+2
+\end{bmatrix}
+\]
+
+\end{example}
+\clearpage
+How do we solve such a system of linear equations? 
+
+\textbf{Central Questions:}
+\begin{itemize}
+	\item What is Gaussian elimination? LU decomposition?
+	\item How is LU decomposition related to Gaussian elimination?
+	\item How is an LU decomposition $A=LU$ computed?
+	\item For any square $A\in\mathbb{R}^{n\times n}$, does a decomposition $A=LU$ exist? 
+\end{itemize}
+\begin{definition}
+\textbf{-- Matrices } 
+
+A Matrix $A\in\mathbb{R}^{m\times n}$ is a rectangular array of numbers:
+\[
+A=
+\begin{bmatrix}
+a_{1,1}&a_{1,2}&...&a_{1,n-1}&a_{1,n}\\
+a_{2,1}&a_{2,2}&...&a_{2,n-1}&a_{2,n}\\
+\vdots&\vdots&&\vdots&\vdots \\
+a_{m-1,1}&a_{m-1,2}&...&a_{m-1,n-1}&a_{m-1,n}\\
+a_{m,1}&a_{m,2}&...&a_{m,n-1}&a_{m,n}\\
+\end{bmatrix}
+\]
+
+Numbers $a_{i,j}$ are elements of A, or entries of A. 
+
+First index ($i$) of element $a_{i,j}$ is the row index.
+
+Second index ($j$) of element $a_{i,j}$ is the column index. 
+\end{definition}
+\vspace{1.5in}
+\begin{definition}
+\textbf{-- Vectors}
+An $n$-vector is a ``skinny'' matrix (dimension $n\times 1$ or $1\times n$).
+\[
+\mathbf{x}=
+\begin{bmatrix}
+x_1\\
+x_2\\
+\vdots \\
+x_{n-1} \\
+x_n
+\end{bmatrix}
+\text{or }\mathbf{x}^T=
+\begin{bmatrix}
+x_1&x_2&...&x_{n-1}&x_n
+\end{bmatrix}
+\]
+
+Elements $x_i$ are components of $\mathbf{x}$.
+
+Convention: vectors generally column vectors assume $\mathbf{x}\in\mathbb{R}^n$ means $\mathbf{x}\in\mathbb{R}^{n\times 1}$.
+
+To \text{\texttt{scipy}}, scalars are vectors of length 1 and also matrices of dimension $1\times 1$.
+\end{definition}
+\clearpage
+\subsection*{Special Matrices}
+\begin{definition}
+\textbf{-- Zero Matrix}
+\[
+\forall A\in\mathbb{R}^{m\times n}\quad A+0=0+A=A\text{, where }0=
+\begin{bmatrix}
+0&0&...&0\\
+0&0&...&0\\
+\vdots&\vdots&\ddots&\vdots \\
+0&0&...&0
+\end{bmatrix}
+\]
+\end{definition}
+\vspace{0.5in}
+\begin{definition}
+\textbf{-- Identity Matrix}
+\[
+A\in\mathbb{R}^{n\times n}\quad AI=IA=A\text{, where } I=
+\begin{bmatrix}
+1&0&...&0\\
+0&1&...&0\\
+\vdots&\vdots&\ddots&\vdots \\
+0&0&...&1
+\end{bmatrix}
+\]
+\end{definition}
+\vspace{0.5in}
+\subsection*{Special Vectors}
+\begin{definition}
+\textbf{-- Coordinate Vector}
+A vector with all 0s and a single 1, at position $k$, is the $k^\text{th}$-coordinate vector. 
+\[
+\mathbf{e}_k=
+\begin{bmatrix}
+0\\
+\vdots \\
+0 \\
+1 \\
+0 \\
+\vdots \\
+0
+\end{bmatrix}
+\]
+\end{definition}
+\clearpage
+\begin{definition}
+\textbf{-- Matrix Transpose}
+If $A\in\mathbb{R}^{m\times n}$, $C=A^T\in\mathbb{R}^{n\times m}$ is 
+\[
+c_{i,j}=a{j,i}\quad(1\leq i\leq n, 1\leq j \leq m)
+\]
+\end{definition}
+\vspace{3in}
+\begin{example}
+Find the transpose:
+\[
+\begin{bmatrix}
+-7 & -5 & 6 \\
+-1 & -8 & 10 
+\end{bmatrix}^T
+\]
+\end{example}
+\clearpage
+\begin{definition}
+\textbf{-- Symmetric Matrix}
+If $A\in\mathbb{R}^{n\times n}$ satisfies $A=A^T$, $A$ is said to be symmetric. 
+\end{definition}
+\vspace{1in}
+\begin{remark}
+If $\mu\in\mathbb{R}$ and $A\in\mathbb{R}^{m\times n}$, $C=\mu A\in\mathbb{R}^{m\times n}$ is
+\[
+c_{i,j}=\mu a_{i,j}\quad(i=1:m,j=1:n)
+\]
+\end{remark}
+\vspace{0.5in}
+\begin{example}
+Simplify
+\[
+3
+\begin{bmatrix}
+1 & -2 \\
+-3 & \frac{1}{2} 
+\end{bmatrix}
+\]
+\end{example}
+\vspace{4in}
+\begin{remark}
+Scalar multiplication in \texttt{scipy}/\texttt{numpy} uses operator $*$. 
+\begin{minted}{python}
+A = np.array([[1,-2],[-3,0.5]])
+B = 3 * A
+\end{minted}
+\end{remark}
+\clearpage
+\begin{definition}
+\textbf{-- Matrix Addition}
+If $A\in\mathbb{R}^{m\times n}$, $B\in\mathbb{R}^{m\times n}$, matrix sum $C=A+B\in\mathbb{R}^{m \times n}$ is
+\[
+c_{i,j}=a_{i,j}+b_{i,j}\quad (i=1:m,j=1:n)
+\]
+\end{definition}
+\vspace{1.5in}
+\begin{example}
+Simplify
+\[
+\begin{bmatrix}
+-2 & -3 & 3 \\
+4 & -5 & -3 \\
+\end{bmatrix}
++
+\begin{bmatrix}
+7 & 5 & 2 \\
+-9 & -3 & 8 \\
+\end{bmatrix}
+\]
+\end{example}
+\vspace{4in}
+\begin{remark}
+Matrices must be conformable (same shape) for addition. 
+\end{remark}
+\begin{remark}
+Matrix addition in \texttt{scipy} uses $+$ operator. 
+\begin{minted}{python}
+A = np.array([[-2.0,-3,3],[4,-5,-3]])
+B = np.array([[7.0,5,2],[-9,-3,8]])
+C = A + B
+\end{minted}
+\end{remark}
+\clearpage
+\begin{definition}
+\textbf{-- Matrix Multiplication}
+If $A\in\mathbb{R}^{m\times s}$, $B\in\mathbb{R}^{s\times n}$, matrix product $C=AB\in\mathbb{R}^{m\times n}$ is
+\[
+c_{i,j}=\sum_{k=1}^s a_{i,k}b_{k,j}\quad(i=1:m,j=1:n)
+\]
+\end{definition}
+\vspace{0.5in}
+\begin{example}
+Simplify
+\[
+\begin{bmatrix}
+-1 & 5 & -4 \\
+-4 & 1 & 2 
+\end{bmatrix}
+\begin{bmatrix}
+-2 & -1 & 0 \\
+3 & 3 & 2 \\
+-1 & -1 & 2 
+\end{bmatrix}
+\]
+\end{example}
+\vspace{4in}
+\begin{remark}
+Note: $AB\neq BA$ in general! 
+\end{remark}
+\vspace{0.25in}
+\begin{remark}
+In \texttt{scipy}: \texttt{scipy.dot(A, B)} or \texttt{scipy.matmul(A, B)}. 
+
+Requires \texttt{A} and \texttt{B} satisfies:
+\begin{minted}{python}
+scipy.shape(A)[1] == scipy.shape(B)[0]
+\end{minted}
+\end{remark}
+\clearpage
+\begin{definition}
+\textbf{-- Matrix Inverse}
+Square matrix $A\in\mathbb{R}^{n\times n}$ is invertible (or regular or nonsingular) if there exists $B\in\mathbb{R}^{n\times n}$ such that
+\[
+AB=BA=I
+\]
+Inverse of $A$ is unique and denoted $A^{-1}$; $A$ must be square. 
+\end{definition}
+\vspace{0.5in}
+\begin{example}
+Simplify
+\[
+\begin{bmatrix}
+-2 & -2 & 4 \\
+1 & -3 & 0 \\
+-4 & 4 & 1
+\end{bmatrix}^{-1}
+\]
+\end{example}
+\clearpage
+\begin{remark}
+For any scalars $\mu\in\mathbb{R}$:
+\begin{enumerate}
+	\item $A+0=0+A=A$
+	\item $IA=AI=A$
+	\item $A(B+C)=AB+AC$ for any $A\in\mathbb{R}^{m\times s}$; $B$, $C\in\mathbb{R}^{s\times n}$
+	\item $(AB)C=A(BC)$ for any $A\in\mathbb{R}^{m\times k}$, $B\in\mathbb{R}^{k\times\ell}$, $C\in\mathbb{R}^{\ell\times n}$
+	\item $\mu (AB)=(\mu A)B=A(\mu B)$ for any $A\in\mathbb{R}^{m\times s}$, $B\in\mathbb{R}^{s\times n}$
+	\item $(\mu A)^T=\mu A^T$
+	\item $(A+B)^T=A^T+B^T$ for any matrices $A,B\in\mathbb{R}^{m \times n}$
+	\item $(AB)^T=B^TA^T$ for any $A\in\mathbb{R}^{m\times s}$, $B\in\mathbb{R}^{s\times n}$
+	\item $(AB)^{-1}=B^{-1}A^{-1}$ for any invertible $A,B\in\mathbb{R}^{n\times n}$
+\end{enumerate}
+\end{remark}
+\begin{theorem}
+\textbf{-- Nonsingular Matrix Properties}
+For $A\in\mathbb{R}^{n\times n}$, the following properties are equivalent:
+\begin{enumerate}
+	\item The inverse of $A$ exists; i.e., $A$ is nonsingular.
+	\item $\det(A)\neq 0$.
+	\item For every $\mathbf{b}\in\mathbb{R}^n$, system $A\mathbf{x}=\mathbf{b}$ has unique solution $\mathbf{x}\in\mathbb{R}^n$.
+	\item $A\mathbf{x}=\mathbf{0}\implies\mathbf{x}=\mathbf{0}$.
+	\item The rows of A form a basis for $\mathbb{R}^n$.
+	\item The columns of A form a basis for $\mathbb{R}^n$. 
+	\item The map $\{A:\mathbb{R}^n\text{ into }\mathbb{R}^{n}\}$ is one-to-one (injective).
+	\item The map $\{A:\mathbb{R}^n\text{ into }\mathbb{R}^{n}\}$ is onto (surjective).
+	\item $0$ is not an eigenvalue of $A$.
+\end{enumerate}
+\end{theorem}
+\clearpage
+\begin{remark}
+Rule for matrix multiplication permits representation of linear systems of equations using matrices and vectors. 
+
+e.g, linear system of equations
+\[
+\begin{array}{rcl}
+2x_1+x_2+x_3=4 \\
+4x_1+3x_2+3x_3+x_4=11 \\
+8x_1+7x_2+9x_3+5x_4=29 \\
+6x_1+7x_2+9x_3+8x_4=30 \\
+\end{array}
+\]
+can be written as $A\mathbf{x}=\mathbf{b}$ with 
+\[
+\begin{bmatrix}
+2 & 1 & 1 & 0 \\
+4 & 3 & 3 & 1 \\
+8 & 7 & 9 & 5 \\
+6 & 7 & 9 & 8 
+\end{bmatrix}
+\begin{bmatrix}
+x_1 \\
+x_2 \\
+x_3 \\
+x_4 
+\end{bmatrix}
+=
+\begin{bmatrix}
+4 \\
+11 \\
+29 \\
+30 
+\end{bmatrix}
+\]
+\end{remark}
+\begin{remark}
+We can solve linear systems of equations in \texttt{scipy} with the linalg module using
+
+\texttt{scipy.linalg.solve}
+
+scipy.linalg actually calls the LAPACK and BLAS routines, optimized for your hardware under Linux. 
+
+Simplest use:
+
+\begin{minted}{python}
+import scipy
+A = np.array([[7.0, 5.0, 2.0],
+		     [-3.0, 1.0, 0.0],
+		     [0.0, 12.0, -3.0]])
+b = np.array([[3.0],[-4.0],[0.0]])
+x = scipy.linalg.solve(A,b)
+\end{minted}
+%
+\end{remark}
+\clearpage
+\begin{remark}
+Never solve linear systems by computing $A^{-1}$ and $\mathbf{x}=A^{-1}\mathbf{b}$! Use \texttt{scipy}'s built-in solvers that avoid inverting matrices. We will see that computing $A^{-1}$ explicitly is slow and often leads to large numerical errors. 
+\end{remark}
+\begin{definition}
+\textbf{-- Diagonal System}
+
+Given vector $\mathbf{b} =(b_1,...,b_n)^T\in\mathbb{R}^n$, and diagonal matrix $D$, wish to solve linear system of equations $D\mathbf{x}=\mathbf{b}$, i.e.,
+\[
+\begin{bmatrix}
+d_1 & & & \\
+& d_2 & & \\
+& & \ddots & \\
+& & & d_n \\
+\end{bmatrix}
+\begin{bmatrix}
+x_1 \\
+x_2 \\
+\vdots \\
+x_n
+\end{bmatrix}
+=
+\begin{bmatrix}
+b_1 \\
+b_2 \\
+\vdots \\
+b_n
+\end{bmatrix}
+\]
+Solution of $D\mathbf{x}=\mathbf{b}$ directly computable:
+\[
+x_k=\frac{b_k}{d_k}\quad(d_k\neq0, k=1:n)
+\]
+\end{definition}
+\vspace{1in}
+\begin{example}
+Solve the system of linear equations:
+\[
+\begin{bmatrix}
+2 & & \\
+& 3 & \\
+& & -4 
+\end{bmatrix}
+\begin{bmatrix}
+x_1 \\
+x_2 \\ 
+x_3 
+\end{bmatrix}
+=
+\begin{bmatrix}
+5 \\
+9 \\
+1
+\end{bmatrix}
+\]
+\end{example}
+\clearpage
+\begin{definition}
+\textbf{-- Upper Triangular Systems}
+Given $\mathbf{b} = (b_1,...,b_n)^T \in \mathbb(R)^n$ and $U$ upper triangular, wish to solve linear system of equations $U\mathbf{x}=\mathbf{b}$, i.e.,
+\[
+\begin{bmatrix}
+U_{1,1} & U_{1,2} & ... & U_{1,n} \\
+& U_{2,2} & ... & U_{2,n} \\
+& & \ddots & \vdots \\
+& & & U_{n,n} 
+\end{bmatrix}
+\]
+\end{definition}
+\vspace{1in}
+\begin{remark}
+Solution of $U\mathbf{x} =\mathbf{b}$ through backward substitution:
+\[
+x_k=\frac{1}{U_{k,k}}(b_k-\sum_{j=k+1}^n U_{k,j}x_k)\quad(k=1:n)
+\]
+\end{remark}
+\vspace{0.5in}
+\begin{example}
+Solve the linear system of equations:
+\[
+\begin{bmatrix}
+2 & 3 & -2 \\
+& 3 & 5 \\
+& & -4 \\
+\end{bmatrix}
+\begin{bmatrix}
+x_1 \\
+x_2 \\
+x_3
+\end{bmatrix}
+=
+\begin{bmatrix}
+5 \\
+9 \\
+1
+\end{bmatrix}
+\]
+\end{example}
+\clearpage
+\begin{definition}
+\textbf{-- Lower Triangular Systems}
+Given $\mathbf{b} = (b_1,...,b_n)^T \in \mathbb(R)^n$ and $L$ lower triangular, wish to solve linear system of equations $L\mathbf{x}=\mathbf{b}$, i.e.,
+\[
+\begin{bmatrix}
+L_{1,1} & & & \\
+L_{2,1} & L_{2,2} & & \\
+\vdots & \vdots & \ddots & \\
+L_{n,1} & L_{n,2} & ... & L_{n,n}
+\end{bmatrix}
+\]
+\end{definition}
+\vspace{1in}
+\begin{remark}
+Solution of $L\mathbf{x} =\mathbf{b}$ through backward substitution:
+\[
+x_k=\frac{1}{L_{k,k}}(b_k-\sum_{j=1}^{k-1} L_{k,j}x_j)\quad(k=1:n)
+\]
+\end{remark}
+\vspace{0.5in}
+\begin{example}
+Solve the linear system of equations:
+\[
+\begin{bmatrix}
+2 & & \\
+3 & 3 & \\
+-2 & 5 & -4
+\end{bmatrix}
+\begin{bmatrix}
+x_1 \\
+x_2 \\
+x_3
+\end{bmatrix}
+=
+\begin{bmatrix}
+5 \\
+9 \\
+1
+\end{bmatrix}
+\]
+\end{example}
+\clearpage
+\section*{Gaussian Elimination}
+\begin{remark}
+Gaussian elimination transforms a general system $A\mathbf{x}=\mathbf{b}$ into an easy-to-solve system. 
+
+\textbf{Elementary Row Operations}
+\begin{itemize}
+	\item Interchanging two equations: $R_i \leftrightarrow R_j$.
+	\item Multiplying an equation by a nonzero scalar: $R_i \gets \lambda R_j$.
+	\item Adding a multiple of an equation to another: $R_i\gets R_i + \lambda R_j$.
+\end{itemize}
+
+\textbf{Central Idea}
+
+Reduce square system of linear equations to upper triangular system by sequence of elementary row operations. 
+\end{remark}
+\vspace{1in}
+\begin{example}
+Consider solving linear system of equations:
+\[
+\begin{array}{rcl}
+2x_1+x_2+x_3=4 \\
+4x_1+3x_2+3x_3+x_4=11 \\
+8x_1+7x_2+9x_3+5x_4=29 \\
+6x_1+7x_2+9x_3+8x_4=30 \\
+\end{array}
+\]
+
+Write the system as $A\mathbf{x} = \mathbf{b}$, form augmented system, and carry out elimination. 
+\end{example}
+\clearpage
+\begin{definition}
+\textbf{-- Pivot Element}
+
+Pivot element on diagonal used to zero out entries. 
+\[
+\text{pivot}=A_{k,k}\quad(k=1:n-1)
+\]
+\end{definition}
+\vspace{0.75in}
+\begin{definition}
+\textbf{-- Multiplier}
+
+Multiplier for eliminating $A_{k,\ell}$ with pivot element $A_{k,k}$ is
+\[
+m_{k,\ell}:=\frac{A_{k,\ell}}{A_{k,k}}\quad(k=1:n-1,\ell=k+1:n)
+\]
+\end{definition}
+\vspace{0.75in}
+\begin{remark}
+Multiply $k$th now by $-m_{k,\ell}$ and add to $\ell$th row.
+
+Zeros out $k$th column below diagonal pivot element.
+
+For the moment, assume no row interchanges. 
+\end{remark}
+\vspace{0.75in}
+\begin{remark}
+\textbf{Key Observation}
+
+Each stage of elimination amounts to multiplying $A$ on the left by unit lower triangular matrix with negatives of multipliers in pivot column. 
+\end{remark}
+\clearpage
+\section*{LU Decomposition}
+\begin{remark}
+Gaussian elimination is equivalent to finding $L$ and $U$ such that:
+\begin{itemize}
+	\item $L$ is the lower triangular matrix (ones on diagonal),
+	\item $U$ is upper triangular matrix,
+	\item $A=LU$.
+\end{itemize}
+\end{remark}
+\begin{definition}
+A pair of matrices $L$ and $U$ with the propertiews above is an LU decomposition (or LU factorisation or Gauss factorisation) of $A$. 
+\end{definition}
+\vspace{1in}
+\begin{remark}
+\begin{enumerate}
+	\item Start by writing down $n\times n$ matrix $A$ and identity matrix.
+	\item Carry out steps of Gaussian elimination, transforming $A$ to upper triangular (``row echelon'') form. 
+	\item At each stage of elimination, write multiplier $m_{k,\ell}$ in $(k,\ell)$ position of identity matrix $(k=1:n-1, \ell=k+1:n)$.
+	\item At end, result is upper triangular $U$ and unit lower triangular $L$.
+\end{enumerate}
+
+Even if $A$ is invertible, procedure above may not work.
+
+Pivoting required for some matrices. 
+\end{remark}
+\clearpage
+\begin{example}
+Start from square matrix $A$ and an identity matrix. Find the triangular factors $L$ and $U$ such that $LU=A$, with:
+\[
+A=
+\begin{bmatrix}
+2 & 1 & 1 & 0 \\
+4 & 3 & 3 & 1 \\
+8 & 7 & 9 & 5 \\
+6  & 7 & 9 & 8 
+\end{bmatrix}
+\]
+\end{example}
+\clearpage
+\begin{remark}
+Pseudo-code for LU decomposition without pivoting:
+\begin{algorithmic}
+\Require $A\in\mathbb{R}^{n\times n}$
+\State $U \gets A$
+\State $L \gets I$\Comment{(initialize matrices)}
+\State $j \gets 1$
+\While{$j\leq n-1$}\Comment{(loop through pivot columns)}
+	\State $i \gets j+1$
+	\While{$i\leq n$}
+		\State $L_{i,j}\gets \frac{U_{i,j}}{U_{j,j}}$\Comment{(store multiplier in $L$ matrix)}
+		\State $U_{i,j:n}\gets U_{i,j:n}-L_{i,j}U_{j,j:n}$\Comment{(update row $i$ of $U$ matrix)}
+	\EndWhile
+\EndWhile
+\end{algorithmic}
+\end{remark}
+\vspace{1in}
+\begin{theorem}
+For a given nonsingular matrix $A\in\mathbb{R}^{n\times n}$, the LU decomposition $A=LU$ exists and is unique if and only if all the leading principal submatrices of $A$ are nonsingular. 
+
+Note: a leading submatrix is obtained from a matrix $A$ by extracting its first $k$ rows and columns: $A(1:k,1:k)$.
+\begin{itemize}
+	\item LU decomposition $A=LU$ has $L$ lower unit triangular and $U$ upper triangular. 
+	\item Not always possible to find $A=LU$ for $A$ nonsingular.
+	\item When $A$ nonsingular, always possible to find permutation $P$ such that $PA=LU$, i.e., so that $PA$ has a Gauss (LU) factorisation. 
+\end{itemize}
+\end{theorem}
+\end{document}
